@@ -15,10 +15,33 @@ export const toJSS = (cssText) => {
   }
 };
 
+const isNumber = (val) => typeof val === "number";
+
+const format = (key, val) => {
+  val = val.endsWith("px") ? val.split("px")[0] / 2 + "px" : val;
+  if (key === "fontFamily") {
+    if (/Medium/i.test(val)) {
+      key = "fontWeight";
+      val = "500";
+    } else if (/Semi-?Bold/i.test(val)) {
+      key = "fontWeight";
+      val = "600";
+    } else if (/Bold/i.test(val)) {
+      key = "fontWeight";
+      val = "700";
+    } else {
+      return null;
+    }
+  }
+  return [key, val];
+};
+
 export const toRN = (cssText) => {
   try {
     const output = toJSSObject(cssText);
-    const result = Object.keys(output).map((rules) => [rules, output[rules]]);
+    const result = Object.keys(output)
+      .map((rules) => format(rules, output[rules]))
+      .filter((x) => x !== null);
     return JSON.stringify(transform(result), null, 2);
   } catch (e) {
     return "Error translating CSS to RN";
